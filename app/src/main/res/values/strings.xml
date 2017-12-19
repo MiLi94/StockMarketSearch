@@ -1,0 +1,52 @@
+<resources>
+    <string name="app_name">Stock Market Search</string>
+    <string name="title_activity_stock_detail">StockDetailActivity</string>
+    <string name="tab_text_1">CURRENT</string>
+    <string name="tab_text_2">HISTORICAL</string>
+    <string name="tab_text_3">NEWS</string>
+    <string name="action_settings">Settings</string>
+    <string name="section_format">Hello World from section: %1$d</string>
+
+    <string name="sort_by_prompt">Sort by</string>
+
+    <string name="indicator_prompt">Price</string>
+
+
+    <string-array name="sort_by">
+        <item>Sort by</item>
+        <item>Default</item>
+        <item>Symbol</item>
+        <item>Price</item>
+        <item>Change</item>
+        <item>Change Percent</item>
+    </string-array>
+    <string-array name="indicators">
+        <item>Price</item>
+        <item>EMA</item>
+        <item>SMA</item>
+        <item>STOCH</item>
+        <item>RSI</item>
+        <item>ADX</item>
+        <item>CCI</item>
+        <item>BBANDS</item>
+        <item>MACD</item>
+    </string-array>
+    <string-array name="order">
+        <item>Order</item>
+        <item>Ascending</item>
+        <item>Descending</item>
+    </string-array>
+
+    <string-array name="menu">
+        <item>No</item>
+        <item>Yes</item>
+    </string-array>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="facebook_app_id">2004205443194519</string>
+    <string name="fb_login_protocol_scheme">fb2004205443194519</string>
+
+
+</resources>

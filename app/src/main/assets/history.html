@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        #loading_message {
+            min-height: 100px;
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+            font-size:20px;
+            margin-top:30%;
+        }
+        a:link {
+    text-decoration: none;
+    color: blue;
+}
+
+a:visited {
+    text-decoration: none;
+    color: blue;
+}
+
+a:hover {
+    text-decoration: none;
+    color: black;}
+    </style>
+    <!-- Latest compiled and minified CSS -->
+
+    <!-- Latest compiled and minified JavaScript -->
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script>
+        function generate_history(symbol, yAxis_data) {
+            var options1 = {
+                chart: {
+                    renderTo: 'chart',
+                    zoomType: 'x'
+                },
+                rangeSelector: {
+                    selected: 0,
+                    buttons: [{
+                        type: 'month',
+                        count: 1,
+                        text: '1m'
+                    }, {
+                        type: 'month',
+                        count: 3,
+                        text: '3m'
+                    }, {
+                        type: 'month',
+                        count: 6,
+                        text: '6m'
+                    }, {
+                        type: 'year',
+                        count: 1,
+                        text: '1y'
+                    }, {
+                        type: 'all',
+                        text: 'All'
+                    }]
+                },
+                title: {
+                    text: symbol + " Stock Value"
+                },
+                subtitle: {
+                    text: '<a href="https://www.alphavantage.co/" target="_blank">Source: Alpha Vantage</a>',
+                    useHTML: true
+                },
+                tooltip: {
+                    xDateFormat: '%A, %b %d, %Y',
+                    shared: true,
+                    split: false
+                },
+                yAxis: [{
+                    title: {
+                        text: 'Stock Value'
+                    }
+                }],
+                series: [{
+                    name: 'Stock Value',
+                    data: yAxis_data,
+                    type: 'area',
+                    color: "#96c2ec"
+                }]
+            };
+            var chart = new Highcharts.stockChart(options1);
+        }
+        function generate_chart(symbol) {
+            var func = "price";
+
+            document.getElementById("loading_message").innerHTML = "Loading " + symbol + "'s history chart";
+            $("#loading_message").show();
+            setTimeout(function (){
+                $.ajax({
+                    url: "http://mili.us-east-1.elasticbeanstalk.com/query_charts?symbol=" + symbol + "&func=" + func,
+                    type: "GET",
+                    contentType: 'application/x-www-form-urlencoded', //here it is
+                    crossDomain: true,
+                    success: function (response) {
+                        // console.log(response)
+                        try {
+                            var chart_data = JSON.parse(response);
+                            if (chart_data["error"] == 0) {
+                                if (chart_data["data"] && chart_data["data"]["history"]) {
+                                    $("#loading_message").hide();
+                                    generate_history(symbol, chart_data["data"]["history"]);
+                                }
+                            }
+                            else {
+                                document.getElementById("loading_message").innerHTML = "Failed to load " + symbol + "'s history chart";
+                            }
+                        } catch (error) {
+                            document.getElementById("loading_message").innerHTML = "Failed to load " + symbol + "'s history chart";
+                        }
+                    },
+                    error: function (xhr, status) {
+                        document.getElementById("loading_message").innerHTML = "Failed to load " + symbol + "'s history chart";
+                    },
+                    complete: function () {
+                    window.cpjs.sendToAndroid();
+                    }
+                })}
+                , 400);
+        }
+    </script>
+
+</head>
+
+<body>
+    <div id="loading_message">
+
+    </div>
+    <div id="chart">
+
+    </div>
+</body>
+
+</html>

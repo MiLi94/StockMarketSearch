@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+
+<head>
+    <style>
+        #loading_message{
+            min-height:100px;
+            text-align:center;
+            margin-left: auto;
+            margin-right: auto;
+            font-size:20px;
+            margin-top:30%;
+        }
+        a:link {
+    text-decoration: none;
+    color: blue;
+}
+
+a:visited {
+    text-decoration: none;
+    color: blue;
+}
+
+a:hover {
+    text-decoration: none;
+    color: black;}
+
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script>
+
+        function generate_history(symbol, yAxis_data) {
+            $(function () {
+                var options1 = {
+                    chart: {
+                        // marginRight: 200
+                        renderTo: 'history_chart',
+                        zoomType: 'x'
+                    },
+                    rangeSelector: {
+                        selected: 0,
+                        buttons: [{
+                            type: 'week',
+                            count: 1,
+                            text: '1w',
+                        }, {
+                            type: 'month',
+                            count: 1,
+                            text: '1m',
+                        }, {
+                            type: 'month',
+                            count: 3,
+                            text: '3m'
+                        }, {
+                            type: 'month',
+                            count: 6,
+                            text: '6m'
+                        }, {
+                            type: 'ytd',
+                            text: 'YTD'
+                        }, {
+                            type: 'year',
+                            count: 1,
+                            text: '1y'
+                        }, {
+                            type: 'all',
+                            text: 'All'
+                        }]
+                    },
+                    title: {
+                        text: symbol + " Stock Value"
+                    },
+                    subtitle: {
+                        text: '<a href="https://www.alphavantage.co/" target="_blank">Source: Alpha Vantage</a>',
+                        useHTML: true
+                    },
+                    tooltip: {
+                        xDateFormat: '%A, %b %d, %Y',
+                        shared: true,
+                        split: false
+                    },
+                    yAxis: [{
+                        title: {
+                            text: 'Stock Value'
+                        }
+                    }],
+                    series: [{
+                        name: 'Stock Value',
+                        data: yAxis_data,
+                        type: 'area',
+                        color: "#96c2ec",
+                    }]
+                };
+                var chart = new Highcharts.stockChart(options1);
+            });
+        }
+
+
+
+        function generate_chart(symbol, func) {
+            document.getElementById("loading_message").innerHTML = "Loading " + symbol + "'s " + func + " chart...";
+            $("#loading_message").show();
+            $.ajax({
+                url: "http://mili.us-east-1.elasticbeanstalk.com/query_charts?symbol=" + symbol + "&func=" + func,
+                type: "GET",
+                contentType: 'application/x-www-form-urlencoded', //here it is
+                crossDomain: true,
+                success: function (response) {
+                    // console.log(response)
+                    try {
+                        var chart_data = JSON.parse(response);
+                        if (chart_data["error"] == 0) {
+                            var typeofDate = func;
+                            if (func != "price") {
+                                typeofDate = func.toUpperCase();
+                            }
+                            var temp_data = chart_data["data"][typeofDate];
+                            var chart_title = chart_data["data"]["title"]
+                            var date_catalog = Object.keys(temp_data);
+                            var data_types = Object.keys(temp_data[date_catalog[0]]);
+                            var yAxis_data = {};
+                            for (var i = 0; i < data_types.length; i++) {
+                                yAxis_data[data_types[i]] = [];
+                            }
+                            for (var key in temp_data) {
+                                if (temp_data.hasOwnProperty(key)) {
+                                    var element = temp_data[key];
+                                    for (var subKey in element) {
+                                        if (element.hasOwnProperty(subKey)) {
+                                            yAxis_data[subKey].push(element[subKey]);
+                                        }
+                                    }
+                                }
+                            }
+                            $("#loading_message").hide();
+                            generate_charts(symbol, date_catalog, yAxis_data, chart_title, func);
+                        }
+                        else {
+                            window.cpjs.showError();
+                            document.getElementById("loading_message").innerHTML = "Failed to load " + symbol + "'s " + func + " chart";
+                        }
+                    } catch (error) {
+                        window.cpjs.showError();
+                        document.getElementById("loading_message").innerHTML = "Failed to load " + symbol + "'s " + func + " chart";
+                    }
+                },
+                error: function (xhr, status) {
+                    window.cpjs.showError();
+                    document.getElementById("loading_message").innerHTML = "Failed to load " + symbol + "'s " + func + " chart";
+                },
+                complete: function () {
+                }
+            });
+        }
+        function generate_charts(stock_symbol, xdata, yAxis_data, title, tabs) {
+            $(function () {
+                // Create the first chart
+                if (tabs == "price") {
+                    var stock_volume_data = [];
+                    var stock_price_data = [];
+                    for (var key in yAxis_data) {
+                        if (yAxis_data.hasOwnProperty(key)) {
+                            if (key == "price") {
+                                stock_price_data = yAxis_data[key];
+                            } else if (key == "volume") {
+                                stock_volume_data = yAxis_data[key];
+                            }
+                        }
+                    }
+                    var options1 = {
+                        chart: {
+                            // marginRight: 200
+                            renderTo: 'chart',
+                            zoomType: 'x'
+                        },
+                        title: {
+                            text: title
+                        },
+                        subtitle: {
+                            text: '<a href="https://www.alphavantage.co/" target="_blank">Source: Alpha Vantage</a>',
+                            useHTML: true
+                        },
+                        xAxis: [{
+                            tickInterval: 10,
+                            categories: xdata,
+                        }],
+                        yAxis: [{
+                            title: {
+                                text: 'Stock Price',
+                            },
+                        },
+                        {
+                            title: {
+                                text: 'Volume',
+                            },
+                            opposite: true,
+                        }],
+                        series: [{
+                            name: "Price",
+                            type: 'area',
+                            yAxis: 0,
+                            marker: {
+                                // enabled: false
+                            },
+                            data: stock_price_data,
+                            color: "#0000ff",
+                            fillOpacity: 0.1,
+                            tooltip: {
+                                pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y:.2f}</b><br/>'
+                            },
+                        }, {
+                            name: "Volume",
+                            type: 'column',
+                            yAxis: 1,
+                            color: "red",
+                            data: stock_volume_data
+                        }],
+                    };
+                }
+                else {
+                    var stock_volume_data = [];
+                    var stock_price_data = [];
+                    var options1 = {
+                        chart: {
+                            renderTo: 'chart',
+                            type: 'line',
+                            zoomType: 'x'
+
+                        },
+                        title: {
+                            text: title
+                        },
+                        subtitle: {
+                            text: '<a href="https://www.alphavantage.co/" target="_blank">Source: Alpha Vantage</a>',
+                            useHTML: true
+                        },
+                        xAxis: [{
+                            tickInterval: 10,
+                            categories: xdata,
+                        }],
+                        yAxis: [{
+                            title: {
+                                text: tabs.toUpperCase(),
+                            },
+
+                        }],
+                        series: [],
+                    };
+                    for (var key in yAxis_data) {
+                        if (yAxis_data.hasOwnProperty(key)) {
+                            var series_options = {
+                                name: key,
+                                marker: {
+                                    // enabled: false
+                                },
+                                data: []
+                            };
+                            series_options.data = yAxis_data[key];
+                            options1.series.push(series_options);
+                        }
+                    }
+                }
+                var chart = new Highcharts.Chart(options1);
+                window.cpjs.sendToAndroid(JSON.stringify(options1));
+            });
+        }
+
+
+
+
+    </script>
+
+</head>
+
+<body>
+<div id="loading_message">
+</div>
+<div id="chart">
+
+</div>
+</body>
+
+</html>
